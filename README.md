@@ -15,7 +15,6 @@
 
 ## Установка и запуск
 
-```bash
 # Установка зависимостей
 pip install -r requirements.txt
 
@@ -31,3 +30,4 @@ database.py - работа с базой данных
 templates/ - HTML страницы
 
 static/ - CSS стили
+

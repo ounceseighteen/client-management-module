@@ -16,13 +16,16 @@
 # Установка и запуск
 
 ## Установка зависимостей
+
 pip install -r requirements.txt
 
 ## Запуск приложения
+
 python app.py
 Приложение доступно по адресу: http://localhost:5000
 
 ##Структура проекта
+
 app.py - основное приложение
 
 database.py - работа с базой данных
@@ -30,5 +33,6 @@ database.py - работа с базой данных
 templates/ - HTML страницы
 
 static/ - CSS стили
+
 
 

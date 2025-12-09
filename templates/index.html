@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM "Азимут Плюс" - Модуль учета клиентов</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-users"></i> Модуль учета клиентов</h1>
+            <p class="subtitle">CRM система "Азимут Плюс" - Производственная практика</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Быстрое добавление клиента</h2>
+                <form id="addClientForm">
+                    <input type="text" id="name" placeholder="Имя клиента*" required>
+                    <input type="email" id="email" placeholder="Email*" required>
+                    <input type="tel" id="phone" placeholder="Телефон">
+                    <input type="text" id="company" placeholder="Компания">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Добавить клиента
+                    </button>
+                </form>
+                <div id="message" class="message"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-chart-bar"></i> Экспорт данных</h2>
+                <p>Экспортируйте данные клиентов в различные форматы:</p>
+                <div class="export-buttons">
+                    <a href="/export/pdf" class="btn-export pdf">
+                        <i class="fas fa-file-pdf"></i> Экспорт в PDF
+                    </a>
+                    <a href="/export/csv" class="btn-export csv">
+                        <i class="fas fa-file-csv"></i> Экспорт в CSV
+                    </a>
+                    <a href="/clients" class="btn-export">
+                        <i class="fas fa-list"></i> Просмотр всех клиентов
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-code"></i> API документация</h2>
+                <p>REST API для интеграции с другими системами:</p>
+                <div class="api-examples">
+                    <code>GET /api/clients</code> - Получить список клиентов<br>
+                    <code>POST /api/clients</code> - Добавить клиента<br>
+                    <code>DELETE /api/clients/{id}</code> - Удалить клиента<br>
+                    <code>GET /export/pdf</code> - Экспорт в PDF<br>
+                    <code>GET /export/csv</code> - Экспорт в CSV
+                </div>
+                <a href="https://www.postman.com/" target="_blank" class="btn-secondary">
+                    <i class="fas fa-external-link-alt"></i> Тестировать в Postman
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-database"></i> Список клиентов (последние 5)</h2>
+            <div id="clientsList">
+                <p>Загрузка данных...</p>
+            </div>
+            <a href="/clients" class="btn-secondary">
+                <i class="fas fa-eye"></i> Показать всех клиентов
+            </a>
+        </div>
+
+        <footer>
+            <p>Разработано в рамках производственной практики в компании "Азимут Плюс"</p>
+            <p class="tech">Технологии: Python, Flask, SQLite, ReportLab (PDF)</p>
+        </footer>
+    </div>
+
+    <script>
+        // Загрузка списка клиентов
+        async function loadClients() {
+            try {
+                const response = await fetch('/api/clients');
+                const clients = await response.json();
+
+                const container = document.getElementById('clientsList');
+                if (clients.length === 0) {
+                    container.innerHTML = '<p>Клиентов пока нет</p>';
+                    return;
+                }
+
+                // Показать только последние 5
+                const lastClients = clients.slice(-5);
+
+                let html = '<table><tr><th>ID</th><th>Имя</th><th>Email</th><th>Телефон</th><th>Действия</th></tr>';
+                lastClients.forEach(client => {
+                    html += `
+                    <tr>
+                        <td>${client.id}</td>
+                        <td>${client.name}</td>
+                        <td>${client.email}</td>
+                        <td>${client.phone || '-'}</td>
+                        <td>
+                            <button onclick="deleteClient(${client.id})" class="btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        }
+
+        // Удаление клиента
+        async function deleteClient(id) {
+            if (!confirm('Удалить клиента?')) return;
+
+            try {
+                const response = await fetch(`/api/clients/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showMessage('Клиент удален', 'success');
+                    loadClients();
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showMessage('Ошибка при удалении', 'error');
+            }
+        }
+
+        // Добавление клиента
+        document.getElementById('addClientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const clientData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                company: document.getElementById('company').value
+            };
+
+            try {
+                const response = await fetch('/api/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clientData)
+                });
+
+                if (response.ok) {
+                    showMessage('Клиент успешно добавлен!', 'success');
+                    document.getElementById('addClientForm').reset();
+                    loadClients();
+                } else {
+                    showMessage('Ошибка при добавлении', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showMessage('Ошибка соединения', 'error');
+            }
+        });
+
+        // Показать сообщение
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => {
+                msg.textContent = '';
+                msg.className = 'message';
+            }, 3000);
+        }
+
+        // Загружаем клиентов при старте
+        loadClients();
+    </script>
+</body>
+</html>

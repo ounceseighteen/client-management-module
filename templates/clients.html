@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все клиенты - CRM "Азимут Плюс"</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-address-book"></i> База клиентов</h1>
+            <p>Всего клиентов: {{ clients|length }}</p>
+        </header>
+
+        <div class="actions">
+            <a href="/" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> На главную
+            </a>
+            <a href="/export/pdf" class="btn-export pdf">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a href="/export/csv" class="btn-export csv">
+                <i class="fas fa-file-csv"></i> CSV
+            </a>
+        </div>
+
+        <div class="card">
+            <table class="clients-table">
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Компания</th>
+                    <th>Дата добавления</th>
+                    <th>Действия</th>
+                </tr>
+                {% for client in clients %}
+                <tr>
+                    <td>{{ client.id }}</td>
+                    <td>{{ client.name }}</td>
+                    <td>{{ client.email }}</td>
+                    <td>{{ client.phone or '-' }}</td>
+                    <td>{{ client.company or '-' }}</td>
+                    <td>{{ client.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>
+                        <button onclick="deleteClient({{ client.id }})" class="btn-delete" title="Удалить">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            {% if not clients %}
+            <p style="text-align: center; padding: 20px;">Клиентов пока нет</p>
+            {% endif %}
+        </div>
+
+        <footer>
+            <p>CRM "Азимут Плюс" &copy; 2024</p>
+        </footer>
+    </div>
+
+    <script>
+        async function deleteClient(id) {
+            if (!confirm('Удалить клиента?')) return;
+
+            try {
+                const response = await fetch(`/api/clients/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Клиент удален');
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при удалении');
+            }
+        }
+    </script>
+</body>
+</html>
